@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script>
+    let globalId = 1;
+    let todoState = [];
+    let oldTodoState = [];
+
+    function markAsDone(id){
+      document.getElementById(id).children[2].innerHTML = "Done!"
+      setTimeout(()=>removeTodoFromDom(id), 1000)
+    }
+
+    function addTodoToDom(todo) {
+      const childTodo = document.createElement("div")
+
+      const title = document.createElement("div")
+      title.innerHTML = todo.title
+      const description = document.createElement("div")
+      description.innerHTML = todo.description
+      const markDone = document.createElement("button")
+      markDone.innerHTML = "Mark as Done"
+      markDone.setAttribute("onclick", `markAsDone(${todo.id})`)
+
+      childTodo.appendChild(title)
+      childTodo.appendChild(description)
+      childTodo.appendChild(markDone)
+      childTodo.setAttribute("id", todo.id)
+      
+      document.getElementById("todos").appendChild(childTodo)
+    }
+
+    function removeTodoFromDom(todo) {
+      document.getElementById(todo.id).remove()
+    }
+
+    function updateTodoInDom(oldTodo, newTodo) {
+        const todo = document.getElementById(oldTodo.id)
+        if(oldTodo.title != newTodo.title){
+          todo.children[0].innerHTML = newTodo.title
+        }
+        if(oldTodo.description != newTodo.description){
+          todo.children[1].innerHTML = newTodo.description
+        }
+    }
+
+    function updateState(newTodoState) {//newTodoState
+      // calculate the diff b/w newTodos and oldTodos.
+      // More specifically, find out what todos are - 
+      // 1. added
+      // 2. deleted
+      // 3. updated
+      const added = [];
+      const deleted = [];
+      const updated = [];
+
+      newTodoState.forEach(newTodoElement => {
+        let oldTodoElement = oldTodoState.find(oldTodoElement=>{
+          return oldTodoElement.id === newTodoElement.id
+        })
+        // console.log(newTodoElement,  oldTodoElement)
+        if(oldTodoElement){
+          if(oldTodoElement.title != newTodoElement.title || 
+          oldTodoElement.description != newTodoElement.description){
+            updated.push([oldTodoElement, newTodoElement])
+          }
+        }else{
+          added.push(newTodoElement)
+        }
+      });
+
+      oldTodoState.forEach(oldTodoElement=>{
+        let newTodoElement = newTodoState.find(newTodoElement=>{
+          return oldTodoElement.id === newTodoElement.id
+        })
+        if(!newTodoElement){
+          deleted.push(oldTodoElement)
+        }
+      })
+      // calculate these 3 arrays
+      // call addTodo, removeTodo, updateTodo functions on each of the
+      // elements
+
+      // console.log(added)
+      // console.log(updated)
+      // console.log(deleted)
+
+      added.forEach((todo)=>{
+        addTodoToDom(todo)
+      })
+
+      updated.forEach(todoOldNew=>{
+        updateTodoInDom(...todoOldNew)
+      })
+
+      deleted.forEach(todo=>{
+        removeTodoFromDom(todo)
+      })
+
+      oldTodoState = [...newTodoState]
+
+    }
+
+    function addTodo() {
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      todoState.push({
+        title: title,
+        description: description,
+        id: globalId++,
+      })
+      updateState(todoState);
+    }
+
+    function addTodoState(state) {
+      state.forEach((todo)=>{
+        todoState.push({
+          title: todo.title,
+          description: todo.description,
+          id: todo.id,
+        })
+      })
+      updateState(todoState);
+    }
+
+
+
+    function testUpdateState(){
+      let old_state = [
+        {
+          id: 1,
+          title: "water",
+          description: "water the tree",
+        },
+        {
+          id: 2,
+          title: "water2",
+          description: "water the tree2",
+        },
+      ]
+      addTodoState(old_state)
+
+      let new_state = [
+        {  
+          id: 1,
+          title: "water",
+          description: "water the bamboo tree",
+        },
+        {
+          id: 3,
+          title: "water3",
+          description: "water the tree3",
+        }
+      ]
+      updateState(new_state)
+    }
+
+    window.onload = testUpdateState
+  </script>
+</head>
+
+<body>
+  <input type="text" id="title" placeholder="Todo title"></input> <br /><br />
+  <input type="text" id="description" placeholder="Todo description"></input> <br /><br />
+  <button onclick="addTodo()">Add todo</button>
+  <br /> <br />
+
+  <div id="todos">
+
+  </div>
+</body>
+
+</html>
